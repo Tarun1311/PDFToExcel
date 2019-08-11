@@ -1,5 +1,6 @@
 package com;
 
+import org.apache.log4j.Logger;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.PDFTextStripperByArea;
@@ -24,9 +25,15 @@ import java.io.FileOutputStream;
 
 public class Extractor {
 
+	static Logger log = Logger.getLogger(Extractor.class);
 	static String[] documentName;
 
 	public static void main(String[] args) throws IOException {
+
+		File f = new File("C:/Users/DELL/Desktop/logging.log");
+		FileOutputStream fout = new FileOutputStream(f);
+		fout.flush();
+		fout.close();
 
 		List<String> files = new ArrayList<>();
 
@@ -35,9 +42,8 @@ public class Extractor {
 		XSSFWorkbook workbook = new XSSFWorkbook();
 		XSSFSheet sheet = workbook.createSheet("Amazon");
 
-		String[][] datatypes = { { "Document No", "Order ID", "TransactionType", "SKU"
-			, "Product Details", "GrandTotal", "quantity", "Date", "Month", "Name","Prime", "Contact", "Pincode", "State",
-				"GST" } };
+		String[][] datatypes = { { "Document No", "Order ID", "TransactionType", "SKU", "Product Details", "GrandTotal",
+				"quantity", "Date", "Month", "Name", "Prime", "Contact", "Pincode", "State", "GST" } };
 
 		int rowNum = 0;
 		System.out.println("Creating excel");
@@ -87,8 +93,9 @@ public class Extractor {
 		}
 
 		int fileCount = 0;
+		boolean errorFlag=false;
 		for (String file : files) {
-
+			errorFlag=false;
 			try (PDDocument document = PDDocument.load(new File(file))) {
 
 				document.getClass();
@@ -109,56 +116,65 @@ public class Extractor {
 
 					for (int i = 0; i < length; i++) {
 						// System.out.println(lines[i]);
-						if (lines[i].equals("Delivery address:")) {
-							name[fileCount] = lines[i + 1];
-						} else if (lines[i].startsWith("Phone :")) {
-							String[] address = lines[i - 1].split(" ");
-							int len = address.length;
-							String stateWithSpace = "";
-							for (int j = 2; j < len - 2; j++)
-								stateWithSpace += address[j] + ' ';
-							state[fileCount] = stateWithSpace.substring(0, stateWithSpace.length() - 1);
-							if (lines[i + 1].startsWith("COD Collectible Amount")) {
-								transactionType[fileCount] = "COD";
-								grandTotal[fileCount] = Float.valueOf(lines[i + 2].substring(2).replaceAll("[,]", ""));
+						try {
+							if (lines[i].equals("Delivery address:")) {
+								name[fileCount] = lines[i + 1];
+							} else if (lines[i].startsWith("Phone :")) {
+								String[] address = lines[i - 1].split(" ");
+								int len = address.length;
+								String stateWithSpace = "";
+								for (int j = 2; j < len - 2; j++)
+									stateWithSpace += address[j] + ' ';
+								state[fileCount] = stateWithSpace.substring(0, stateWithSpace.length() - 1);
+								if (lines[i + 1].startsWith("COD Collectible Amount")) {
+									transactionType[fileCount] = "COD";
+									grandTotal[fileCount] = Float
+											.valueOf(lines[i + 2].substring(2).replaceAll("[,]", ""));
+								}
+							} else if (lines[i].startsWith("Order ID:")) {
+								orderId[fileCount] = lines[i].substring(10);
+							} else if (lines[i].startsWith("SKU:")) {
+								if (lines[i - 2].startsWith("Item total")) {
+									String[] product = lines[i - 1].split(" ", 2);
+									quantity[fileCount] += Integer.valueOf(product[0].replaceAll("[,]", ""));
+									productDetails[fileCount].add(product[1]);
+								} else if (lines[i - 2].startsWith("Quantity")) {
+									String[] product = lines[i - 1].split(" ", 2);
+									quantity[fileCount] += Integer.valueOf(product[0].replaceAll("[,]", ""));
+									productDetails[fileCount].add(product[1]);
+								} else {
+									String[] product = lines[i - 2].split(" ", 2);
+									quantity[fileCount] += Integer.valueOf(product[0].replaceAll("[,]", ""));
+									productDetails[fileCount].add(product[1] + lines[i - 1]);
+								}
+								sku[fileCount].add(lines[i].split(" ")[1]);
+							} else if (lines[i].startsWith("Tax")) {
+								tax[fileCount] += Float.valueOf(lines[i].split(" ")[1].substring(2));
+							} else if (lines[i].startsWith("Grand total:")) {
+								grandTotal[fileCount] = Float
+										.valueOf(lines[i].split(" ")[2].substring(2).replaceAll("[,]", ""));
+								transactionType[fileCount] = "PREPAID";
+								if (grandTotal[fileCount] == 0)
+									transactionType[fileCount] = "";
+							} else if (lines[i].startsWith("Thanks for buying on Amazon Marketplace.")) {
+								break;
 							}
-						} else if (lines[i].startsWith("Order ID:")) {
-							orderId[fileCount] = lines[i].substring(10);
-						} else if (lines[i].startsWith("SKU:")) {
-							if (lines[i - 2].startsWith("Item total")) {
-								String[] product = lines[i - 1].split(" ", 2);
-								quantity[fileCount] += Integer.valueOf(product[0].replaceAll("[,]", ""));
-								productDetails[fileCount].add(product[1]);
-							} else if (lines[i - 2].startsWith("Quantity")) {
-								String[] product = lines[i - 1].split(" ", 2);
-								quantity[fileCount] += Integer.valueOf(product[0].replaceAll("[,]", ""));
-								productDetails[fileCount].add(product[1]);
-							} else {
-								String[] product = lines[i - 2].split(" ", 2);
-								quantity[fileCount] += Integer.valueOf(product[0].replaceAll("[,]", ""));
-								productDetails[fileCount].add(product[1] + lines[i - 1]);
-							}
-							sku[fileCount].add(lines[i].split(" ")[1]);
-						} else if (lines[i].startsWith("Tax")) {
-							tax[fileCount] += Float.valueOf(lines[i].split(" ")[1].substring(2));
-						} else if (lines[i].startsWith("Grand total:")) {
-							grandTotal[fileCount] = Float
-									.valueOf(lines[i].split(" ")[2].substring(2).replaceAll("[,]", ""));
-							transactionType[fileCount] = "PREPAID";
-							if (grandTotal[fileCount] == 0)
-								transactionType[fileCount] = "";
-						} else if (lines[i].startsWith("Thanks for buying on Amazon Marketplace.")) {
+						} catch (Exception ex) {
+							log.error(documentName[fileCount] + " " + ex);
+							errorFlag=true;
+							fileCount++;
 							break;
 						}
 					}
+					if(errorFlag==true)
+						continue;
 				}
 
 			}
 
-			Object[][] data = { { documentName[fileCount], orderId[fileCount], transactionType[fileCount]
-					, sku[fileCount].toString(), productDetails[fileCount].toString(), grandTotal[fileCount]
-					,quantity[fileCount], "", "", name[fileCount], "", "", "", state[fileCount],
-					tax[fileCount] } };
+			Object[][] data = { { documentName[fileCount], orderId[fileCount], transactionType[fileCount],
+					sku[fileCount].toString(), productDetails[fileCount].toString(), grandTotal[fileCount],
+					quantity[fileCount], "", "", name[fileCount], "", "", "", state[fileCount], tax[fileCount] } };
 
 			System.out.println("Creating excel");
 
