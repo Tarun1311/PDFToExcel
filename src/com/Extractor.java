@@ -30,14 +30,14 @@ public class Extractor {
 
 	public static void main(String[] args) throws IOException {
 
-		File f = new File("C:/Users/PC/Desktop/logging.log");
+		File f = new File("C:/Users/DELL/Desktop/logging.log");
 		FileOutputStream fout = new FileOutputStream(f);
 		fout.flush();
 		fout.close();
 
 		List<String> files = new ArrayList<>();
 
-		String FILE_NAME = "C:/Users/PC/Desktop/amazon.xlsx";
+		String FILE_NAME = "C:/Users/DELL/Desktop/amazon.xlsx";
 
 		XSSFWorkbook workbook = new XSSFWorkbook();
 		XSSFSheet sheet = workbook.createSheet("Amazon");
@@ -58,7 +58,7 @@ public class Extractor {
 		}
 		int noOfFiles = 0;
 
-		try (Stream<Path> walk = Files.walk(Paths.get("C:\\Users\\PC\\Desktop\\PDFs"))) {
+		try (Stream<Path> walk = Files.walk(Paths.get("C:\\Users\\DELL\\Desktop\\PDFs"))) {
 
 			List<String> result = walk.filter(Files::isRegularFile).map(x -> x.toString()).collect(Collectors.toList());
 			noOfFiles = result.size();

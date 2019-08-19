@@ -25,7 +25,7 @@ import java.io.FileOutputStream;
 
 public class MultipleFilesInOnePDF {
 
-	static Logger log = Logger.getLogger(Extractor.class);
+	static Logger log = Logger.getLogger(MultipleFilesInOnePDF.class);
 	static List<String> documentName = new ArrayList<>();
 
 	// static String documentName;
@@ -91,6 +91,8 @@ public class MultipleFilesInOnePDF {
 			int fileCount = 0;
 			List<String> name = new ArrayList<>();
 			List<String> state = new ArrayList<>();
+			List<String> pinCode = new ArrayList<>();
+			List<String> phone = new ArrayList<>();
 			List<String> orderId = new ArrayList<>();
 			List<Integer> quantity = new ArrayList<>();
 			List<List<String>> sku = new ArrayList<List<String>>();
@@ -117,30 +119,58 @@ public class MultipleFilesInOnePDF {
 					int length = lines.length;
 
 					for (int i = 0; i < length; i++) {
-//						System.out.println(i + " " + lines[i]);
+						// System.out.println(i + " " + lines[i]);
 						try {
 							if (lines[i].equals("Delivery address:")) {
 								name.add(lines[i + 1]);
 								sku.add(new ArrayList<>());
 								productDetails.add(new ArrayList<>());
 								while (true) {
-//									System.out.println(i + " " + lines[i]);
+									// System.out.println(i + " " + lines[i]);
 									try {
 										if (lines[i].startsWith("Phone :")) {
-											String[] address = lines[i - 1].split(" ");
+											String[] address = lines[i - 1].split(",");
 											int len = address.length;
-											String stateWithSpace = "";
-											for (int j = 2; j < len - 2; j++)
-												stateWithSpace += address[j] + ' ';
-											state.add(stateWithSpace.substring(0, stateWithSpace.length() - 1));
+											boolean flag = true;
+											if (len == 1) {
+												flag = false;
+												address = lines[i - 2].split(",");
+												// len=address.length;
+												// pinCode.add(lines[i-1].trim());
+											}
+											String addressTrim = address[1].trim();
+											String[] statePinCode = addressTrim.split("  ");
+											// int end=len;
+											// if(flag==false)
+											// end=len-1;
+											// System.out.println(addressTrim);
+											// String stateWithSpace = "";
+											// for (int j = 0; j < end; j++)
+											// stateWithSpace += statePinCode[j]
+											// + ' ';
+											// state.add(stateWithSpace.trim()/*substring(0,
+											// stateWithSpace.length() - 1)*/);
+											if (flag == false) {
+												state.add(statePinCode[0].trim());
+												pinCode.add(lines[i - 1].trim());
+											} else {
+												state.add(statePinCode[0].trim());
+												pinCode.add(statePinCode[1].trim());
+											}
+											// if(pinCode.size()==fileCount)
+											// pinCode.add(statePinCode[end].trim());
+											phone.add(lines[i].split("  ")[1].trim());
+											// System.out.println(state.get(fileCount));
 											if (lines[i + 1].startsWith("COD Collectible Amount")) {
 												transactionType.add("COD");
 												grandTotal.add(
 														Float.valueOf(lines[i + 2].substring(2).replaceAll("[,]", "")));
+												// System.out.println(transactionType.get(fileCount));
+												// System.out.println(grandTotal.get(fileCount));
 											}
-											// System.out.println(state.get(fileCount));
 										} else if (lines[i].startsWith("Order ID:")) {
 											orderId.add(lines[i].substring(10));
+											// System.out.println(orderId.get(fileCount));
 										} else if (lines[i].startsWith("SKU:")) {
 											if (lines[i - 2].startsWith("Item total")) {
 												String[] product = lines[i - 1].split(" ", 2);
@@ -167,26 +197,38 @@ public class MultipleFilesInOnePDF {
 															+ Integer.valueOf(product[0].replaceAll("[,]", "")));
 												productDetails.get(fileCount).add(product[1] + lines[i - 1]);
 											}
+											// System.out.println(quantity.get(fileCount));
+											// System.out.println(productDetails.get(fileCount));
 											sku.get(fileCount).add(lines[i].split(" ")[1]);
+											// System.out.println(sku.get(fileCount));
 										} else if (lines[i].startsWith("Tax")) {
 											if (tax.size() == fileCount)
 												tax.add(Float.valueOf(lines[i].split(" ")[1].substring(2)));
 											else
 												tax.set(fileCount, tax.get(fileCount)
 														+ Float.valueOf(lines[i].split(" ")[1].substring(2)));
+											// System.out.println(tax.get(fileCount));
 										} else if (lines[i].startsWith("Grand total:")) {
 											grandTotal.add(Float.valueOf(
 													lines[i].split(" ")[2].substring(2).replaceAll("[,]", "")));
 											transactionType.add("PREPAID");
-											if (grandTotal.get(fileCount) == 0)
+											if (grandTotal.get(fileCount) == 0) {
+												transactionType.remove(fileCount);
 												transactionType.add("");
+												if (tax.size() == fileCount)
+													tax.add((float) 0.00);
+											}
+											// System.out.println(grandTotal.get(fileCount));
+											// System.out.println(transactionType.get(fileCount));
 										} else if (lines[i].startsWith("Thanks for buying on Amazon Marketplace.")) {
 											Object[][] data = { { documentName.get(fileNo), orderId.get(fileCount),
 													transactionType.get(fileCount), sku.get(fileCount).toString(),
 													productDetails.get(fileCount).toString(), grandTotal.get(fileCount),
-													quantity.get(fileCount), "", "", name.get(fileCount), "", "", "",
-													state.get(fileCount), tax.get(fileCount) } };
-											System.out.println("Creating excel");
+													quantity.get(fileCount), "", "", name.get(fileCount), "",
+													phone.get(fileCount), pinCode.get(fileCount), state.get(fileCount),
+													tax.get(fileCount) } };
+											// System.out.println("Creating
+											// excel");
 											fileCount++;
 											for (Object[] datatype : data) {
 												Row row = sheet.createRow(rowNum++);
@@ -209,22 +251,40 @@ public class MultipleFilesInOnePDF {
 										i++;
 
 									} catch (Exception ex) {
-										log.error(documentName.get(fileNo) + " " + name.get(fileCount) + " " + ex + i);
+										log.error(documentName.get(fileNo) + " " + name.get(fileCount) + " " + ex + " "
+												+ i);
 										// errorFlag = true;
-										name.remove(fileCount);
-										state.remove(fileCount);
-										orderId.remove(fileCount);
-										quantity.remove(fileCount);
-										sku.remove(fileCount);
-										productDetails.remove(fileCount);
-										tax.remove(fileCount);
-										grandTotal.remove(fileCount);
-										transactionType.remove(fileCount);
+										// System.out.println(documentName.get(fileNo)
+										// + " " + name.get(fileCount) + " " +
+										// ex + " " + i + " " + fileCount);
+										if (name.size() - 1 == fileCount)
+											name.remove(fileCount);
+										if (state.size() - 1 == fileCount)
+											state.remove(fileCount);
+										if (pinCode.size() - 1 == fileCount)
+											pinCode.remove(fileCount);
+										if (phone.size() - 1 == fileCount)
+											phone.remove(fileCount);
+										if (orderId.size() - 1 == fileCount)
+											orderId.remove(fileCount);
+										if (quantity.size() - 1 == fileCount)
+											quantity.remove(fileCount);
+										if (sku.size() - 1 == fileCount)
+											sku.remove(fileCount);
+										if (productDetails.size() - 1 == fileCount)
+											productDetails.remove(fileCount);
+										if (tax.size() - 1 == fileCount)
+											tax.remove(fileCount);
+										if (grandTotal.size() - 1 == fileCount)
+											grandTotal.remove(fileCount);
+										if (transactionType.size() - 1 == fileCount)
+											transactionType.remove(fileCount);
 										break;
 									}
 								}
 							}
 						} catch (Exception ex) {
+							// System.out.println("cddncdlwcdwlc");
 						}
 						// if (errorFlag == true)
 						// continue;
