@@ -30,14 +30,14 @@ public class Extractor {
 
 	public static void main(String[] args) throws IOException {
 
-		File f = new File("C:/Users/VIP/Desktop/logging.log");
+		File f = new File("C:/Users/ANIL/Desktop/logging.log");
 		FileOutputStream fout = new FileOutputStream(f);
 		fout.flush();
 		fout.close();
 
 		List<String> files = new ArrayList<>();
 
-		String FILE_NAME = "C:/Users/VIP/Desktop/amazon.xlsx";
+		String FILE_NAME = "C:/Users/ANIL/Desktop/amazon.xlsx";
 
 		XSSFWorkbook workbook = new XSSFWorkbook();
 		XSSFSheet sheet = workbook.createSheet("Amazon");
@@ -58,7 +58,7 @@ public class Extractor {
 		}
 		int noOfFiles = 0;
 
-		try (Stream<Path> walk = Files.walk(Paths.get("C:\\Users\\VIP\\Desktop\\PDFs"))) {
+		try (Stream<Path> walk = Files.walk(Paths.get("C:\\Users\\ANIL\\Desktop\\PDFs"))) {
 
 			List<String> result = walk.filter(Files::isRegularFile).map(x -> x.toString()).collect(Collectors.toList());
 			noOfFiles = result.size();
@@ -86,6 +86,8 @@ public class Extractor {
 		float[] tax = new float[noOfFiles];
 		float[] grandTotal = new float[noOfFiles];
 		String[] transactionType = new String[noOfFiles];
+		String[] pinCode = new String[noOfFiles];
+		String[] phone = new String[noOfFiles];
 
 		for (int i = 0; i < noOfFiles; i++) {
 			sku[i] = new ArrayList<>();
@@ -108,7 +110,7 @@ public class Extractor {
 					PDFTextStripper tStripper = new PDFTextStripper();
 
 					String pdfFileInText = tStripper.getText(document);
-					// System.out.println("Text:" + st);
+//					 System.out.println("Text:" + pdfFileInText);
 
 					// split by whitespace
 					String lines[] = pdfFileInText.split("\\r?\\n");
@@ -120,12 +122,41 @@ public class Extractor {
 							if (lines[i].equals("Delivery address:")) {
 								name[fileCount] = lines[i + 1];
 							} else if (lines[i].startsWith("Phone :")) {
-								String[] address = lines[i - 1].split(" ");
+								String[] address = lines[i - 1].split(",");
 								int len = address.length;
+								boolean flag = true;
+								if (len == 1) {
+									flag = false;
+									address = lines[i - 2].split(",");
+									// len=address.length;
+									// pinCode.add(lines[i-1].trim());
+								}
+								String addressTrim = address[1].trim();
+								String[] statePinCode = addressTrim.split("  ");
+								// int end=len;
+								// if(flag==false)
+								// end=len-1;
+								// System.out.println(addressTrim);
+								// String stateWithSpace = "";
+								// for (int j = 0; j < end; j++)
+								// stateWithSpace += statePinCode[j]
+								// + ' ';
+								// state.add(stateWithSpace.trim()/*substring(0,
+								// stateWithSpace.length() - 1)*/);
+								if (flag == false) {
+									state[fileCount] = statePinCode[0].trim();
+									pinCode[fileCount] = lines[i - 1].trim();
+								} else {
+									state[fileCount] = statePinCode[0].trim();
+									pinCode[fileCount] = statePinCode[1].trim();
+								}
+								// if(pinCode.size()==fileCount)
+								// pinCode.add(statePinCode[end].trim());
+								phone[fileCount] = lines[i].split("  ")[1].trim();
 								String stateWithSpace = "";
-								for (int j = 2; j < len - 2; j++)
-									stateWithSpace += address[j] + ' ';
-								state[fileCount] = stateWithSpace.substring(0, stateWithSpace.length() - 1);
+//								for (int j = 2; j < len - 2; j++)
+//									stateWithSpace += address[j] + ' ';
+//								state[fileCount] = stateWithSpace.substring(0, stateWithSpace.length() - 1);
 								if (lines[i + 1].startsWith("COD Collectible Amount")) {
 									transactionType[fileCount] = "COD";
 									grandTotal[fileCount] = Float
@@ -138,7 +169,7 @@ public class Extractor {
 									String[] product = lines[i - 1].split(" ", 2);
 									quantity[fileCount] += Integer.valueOf(product[0].replaceAll("[,]", ""));
 									productDetails[fileCount].add(product[1]);
-								} else if (lines[i - 2].startsWith("Quantity")) {
+								} else if (lines[i - 2].startsWith(" Quantity")) {
 									String[] product = lines[i - 1].split(" ", 2);
 									quantity[fileCount] += Integer.valueOf(product[0].replaceAll("[,]", ""));
 									productDetails[fileCount].add(product[1]);
@@ -174,7 +205,7 @@ public class Extractor {
 
 			Object[][] data = { { documentName[fileCount], orderId[fileCount], transactionType[fileCount],
 					sku[fileCount].toString(), productDetails[fileCount].toString(), grandTotal[fileCount],
-					quantity[fileCount], "", "", name[fileCount], "", "", "", state[fileCount], tax[fileCount] } };
+					quantity[fileCount], "", "", name[fileCount], "", phone[fileCount], pinCode[fileCount], state[fileCount], tax[fileCount] } };
 
 			System.out.println("Creating excel");
 

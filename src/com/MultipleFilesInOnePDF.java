@@ -180,7 +180,7 @@ public class MultipleFilesInOnePDF {
 													quantity.set(fileCount, quantity.get(fileCount)
 															+ Integer.valueOf(product[0].replaceAll("[,]", "")));
 												productDetails.get(fileCount).add(product[1]);
-											} else if (lines[i - 2].startsWith("Quantity")) {
+											} else if (lines[i - 2].startsWith(" Quantity")) {
 												String[] product = lines[i - 1].split(" ", 2);
 												if (quantity.size() == fileCount)
 													quantity.add(Integer.valueOf(product[0].replaceAll("[,]", "")));
