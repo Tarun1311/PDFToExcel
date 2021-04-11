@@ -67,7 +67,7 @@ public class Extractor {
 			for (String file : result) {
 				String location = file.replace('\\', '/');
 				files.add(location);
-				documentName[i] = location.split("/")[5];
+				documentName[i] = location/*.split("/")[5]*/;
 				i++;
 			}
 
@@ -98,6 +98,7 @@ public class Extractor {
 		boolean errorFlag=false;
 		for (String file : files) {
 			errorFlag=false;
+			System.out.println(file);
 			try (PDDocument document = PDDocument.load(new File(file))) {
 
 				document.getClass();
@@ -117,7 +118,7 @@ public class Extractor {
 					int length = lines.length;
 
 					for (int i = 0; i < length; i++) {
-						// System.out.println(lines[i]);
+//						 System.out.println(lines[i]);
 						try {
 							if (lines[i].equals("Delivery address:")) {
 								name[fileCount] = lines[i + 1];
@@ -125,13 +126,13 @@ public class Extractor {
 								String[] address = lines[i - 1].split(",");
 								int len = address.length;
 								boolean flag = true;
-								if (len == 1) {
+								if (len <= 1) {
 									flag = false;
 									address = lines[i - 2].split(",");
 									// len=address.length;
 									// pinCode.add(lines[i-1].trim());
 								}
-								String addressTrim = address[1].trim();
+								String addressTrim = address[address.length-1].trim();
 								String[] statePinCode = addressTrim.split("  ");
 								// int end=len;
 								// if(flag==false)
@@ -161,6 +162,12 @@ public class Extractor {
 									transactionType[fileCount] = "COD";
 									grandTotal[fileCount] = Float
 											.valueOf(lines[i + 2].substring(2).replaceAll("[,]", ""));
+								}else if (lines[i + 1].startsWith("COD Collectible")) {
+									if(lines[i + 2].startsWith("Amount")) {
+										transactionType[fileCount] = "COD";
+										grandTotal[fileCount] = Float
+												.valueOf(lines[i + 3].substring(2).replaceAll("[,]", ""));
+									}
 								}
 							} else if (lines[i].startsWith("Order ID:")) {
 								orderId[fileCount] = lines[i].substring(10);
@@ -169,14 +176,50 @@ public class Extractor {
 									String[] product = lines[i - 1].split(" ", 2);
 									quantity[fileCount] += Integer.valueOf(product[0].replaceAll("[,]", ""));
 									productDetails[fileCount].add(product[1]);
-								} else if (lines[i - 2].startsWith(" Quantity")) {
+								} else if (lines[i - 2].startsWith("Quantity") || lines[i - 2].startsWith(" Quantity")) {
 									String[] product = lines[i - 1].split(" ", 2);
 									quantity[fileCount] += Integer.valueOf(product[0].replaceAll("[,]", ""));
 									productDetails[fileCount].add(product[1]);
 								} else {
-									String[] product = lines[i - 2].split(" ", 2);
-									quantity[fileCount] += Integer.valueOf(product[0].replaceAll("[,]", ""));
-									productDetails[fileCount].add(product[1] + lines[i - 1]);
+									try {
+										String[] product = lines[i - 2].split(" ", 2);
+										quantity[fileCount] += Integer.valueOf(product[0].replaceAll("[,]", ""));
+										productDetails[fileCount].add(product[1] + lines[i - 1]);
+									}catch(NumberFormatException ex) {
+										try {
+											String[] product = lines[i - 3].split(" ", 2);
+											quantity[fileCount] += Integer.valueOf(product[0].replaceAll("[,]", ""));
+											productDetails[fileCount].add(product[1] + lines[i - 2] + lines[i - 1]);
+										}catch(NumberFormatException exe) {
+											try {
+												String[] product = lines[i - 4].split(" ", 2);
+												quantity[fileCount] += Integer.valueOf(product[0].replaceAll("[,]", ""));
+												productDetails[fileCount].add(product[1] + lines[i - 3] + lines[i - 2] + lines[i - 1]);
+											}catch(NumberFormatException exc) {
+												try {
+													String[] product = lines[i - 5].split(" ", 2);
+													quantity[fileCount] += Integer.valueOf(product[0].replaceAll("[,]", ""));
+													productDetails[fileCount].add(product[1] + lines[i - 4] + lines[i - 3] + lines[i - 2] + lines[i - 1]);
+												}catch(NumberFormatException exp) {
+													try {
+														String[] product = lines[i - 6].split(" ", 2);
+														quantity[fileCount] += Integer.valueOf(product[0].replaceAll("[,]", ""));
+														productDetails[fileCount].add(product[1] + lines[i - 5] + lines[i - 4] + lines[i - 3] + lines[i - 2] + lines[i - 1]);
+													}catch(NumberFormatException expt) {
+														try {
+															String[] product = lines[i - 7].split(" ", 2);
+															quantity[fileCount] += Integer.valueOf(product[0].replaceAll("[,]", ""));
+															productDetails[fileCount].add(product[1] + lines[i - 6] + lines[i - 5] + lines[i - 4] + lines[i - 3] + lines[i - 2] + lines[i - 1]);
+														}catch(NumberFormatException expe) {
+																String[] product = lines[i - 8].split(" ", 2);
+																quantity[fileCount] += Integer.valueOf(product[0].replaceAll("[,]", ""));
+																productDetails[fileCount].add(product[1] + lines[i - 7] + lines[i - 6] + lines[i - 5] + lines[i - 4] + lines[i - 3] + lines[i - 2] + lines[i - 1]);
+															}
+													}
+												}
+											}
+										}
+									}
 								}
 								sku[fileCount].add(lines[i].split(" ")[1]);
 							} else if (lines[i].startsWith("Tax")) {
@@ -237,4 +280,17 @@ public class Extractor {
 		}
 		System.out.println("Done");
 	}
+	
+//	public static  listFilesForFolder(final File folder) {
+//	    for (final File fileEntry : folder.listFiles()) {
+//	        if (fileEntry.isDirectory()) {
+//	            listFilesForFolder(fileEntry);
+//	        } else {
+//	            System.out.println(fileEntry.getName());
+//	        }
+//	    }
+//	}
+//
+//	final File folder = new File("/home/you/Desktop");
+//	listFilesForFolder(folder);
 }
