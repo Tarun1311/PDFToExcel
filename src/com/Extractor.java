@@ -122,13 +122,146 @@ public class Extractor {
 						try {
 							if (lines[i].equals("Delivery address:")) {
 								name[fileCount] = lines[i + 1];
-							} else if (lines[i].startsWith("Phone :")) {
-								String[] address = lines[i - 1].split(",");
+//							} else if (lines[i].startsWith("COD Collectible Amount")) {
+//								transactionType[fileCount] = "COD";
+//								grandTotal[fileCount] = Float
+//										.valueOf(lines[i + 2].substring(2).replaceAll("[,]", ""));
+//								
+//								String[] address = lines[i - 1].split(",");
+//								int len = address.length;
+//								boolean flag = true;
+//								if (len <= 1) {
+//									flag = false;
+//									address = lines[i - 2].split(",");
+//									// len=address.length;
+//									// pinCode.add(lines[i-1].trim());
+//								}
+//								String addressTrim = address[address.length-1].trim();
+//								String[] statePinCode = addressTrim.split("  ");
+//								// int end=len;
+//								// if(flag==false)
+//								// end=len-1;
+//								// System.out.println(addressTrim);
+//								// String stateWithSpace = "";
+//								// for (int j = 0; j < end; j++)
+//								// stateWithSpace += statePinCode[j]
+//								// + ' ';
+//								// state.add(stateWithSpace.trim()/*substring(0,
+//								// stateWithSpace.length() - 1)*/);
+//								if (flag == false) {
+//									state[fileCount] = statePinCode[0].trim();
+//									pinCode[fileCount] = lines[i - 1].trim();
+//								} else {
+//									state[fileCount] = statePinCode[0].trim();
+//									pinCode[fileCount] = statePinCode[1].trim();
+//								}
+//								// if(pinCode.size()==fileCount)
+//								// pinCode.add(statePinCode[end].trim());
+////								phone[fileCount] = lines[i].split("  ")[1].trim();
+//							} else if (lines[i].startsWith("COD Collectible")) {
+//								if(lines[i + 2].startsWith("Amount")) {
+//									transactionType[fileCount] = "COD";
+//									grandTotal[fileCount] = Float
+//											.valueOf(lines[i + 3].substring(2).replaceAll("[,]", ""));
+//								}
+//								
+//								String[] address = lines[i - 1].split(",");
+//								int len = address.length;
+//								boolean flag = true;
+//								if (len <= 1) {
+//									flag = false;
+//									address = lines[i - 2].split(",");
+//									// len=address.length;
+//									// pinCode.add(lines[i-1].trim());
+//								}
+//								String addressTrim = address[address.length-1].trim();
+//								String[] statePinCode = addressTrim.split("  ");
+//								// int end=len;
+//								// if(flag==false)
+//								// end=len-1;
+//								// System.out.println(addressTrim);
+//								// String stateWithSpace = "";
+//								// for (int j = 0; j < end; j++)
+//								// stateWithSpace += statePinCode[j]
+//								// + ' ';
+//								// state.add(stateWithSpace.trim()/*substring(0,
+//								// stateWithSpace.length() - 1)*/);
+//								if (flag == false) {
+//									state[fileCount] = statePinCode[0].trim();
+//									pinCode[fileCount] = lines[i - 1].trim();
+//								} else {
+//									state[fileCount] = statePinCode[0].trim();
+//									pinCode[fileCount] = statePinCode[1].trim();
+//								}
+//								// if(pinCode.size()==fileCount)
+//								// pinCode.add(statePinCode[end].trim());
+//								phone[fileCount] = lines[i].split("  ")[1].trim();
+								
+//							} else if (lines[i].startsWith("Phone :")) {
+//								String[] address = lines[i - 1].split(",");
+//								int len = address.length;
+//								boolean flag = true;
+//								if (len <= 1) {
+//									flag = false;
+//									address = lines[i - 2].split(",");
+//									// len=address.length;
+//									// pinCode.add(lines[i-1].trim());
+//								}
+//								String addressTrim = address[address.length-1].trim();
+//								String[] statePinCode = addressTrim.split("  ");
+//								// int end=len;
+//								// if(flag==false)
+//								// end=len-1;
+//								// System.out.println(addressTrim);
+//								// String stateWithSpace = "";
+//								// for (int j = 0; j < end; j++)
+//								// stateWithSpace += statePinCode[j]
+//								// + ' ';
+//								// state.add(stateWithSpace.trim()/*substring(0,
+//								// stateWithSpace.length() - 1)*/);
+//								if (flag == false) {
+//									state[fileCount] = statePinCode[0].trim();
+//									pinCode[fileCount] = lines[i - 1].trim();
+//								} else {
+//									state[fileCount] = statePinCode[0].trim();
+//									pinCode[fileCount] = statePinCode[1].trim();
+//								}
+//								// if(pinCode.size()==fileCount)
+//								// pinCode.add(statePinCode[end].trim());
+//								phone[fileCount] = lines[i].split("  ")[1].trim();
+//								String stateWithSpace = "";
+////								for (int j = 2; j < len - 2; j++)
+////									stateWithSpace += address[j] + ' ';
+////								state[fileCount] = stateWithSpace.substring(0, stateWithSpace.length() - 1);
+//								if (lines[i + 1].startsWith("COD Collectible Amount")) {
+//									transactionType[fileCount] = "COD";
+//									grandTotal[fileCount] = Float
+//											.valueOf(lines[i + 2].substring(2).replaceAll("[,]", ""));
+//								}else if (lines[i + 1].startsWith("COD Collectible")) {
+//									if(lines[i + 2].startsWith("Amount")) {
+//										transactionType[fileCount] = "COD";
+//										grandTotal[fileCount] = Float
+//												.valueOf(lines[i + 3].substring(2).replaceAll("[,]", ""));
+//									}
+//								}
+							} else if (lines[i].startsWith("Order ID:")) {
+								orderId[fileCount] = lines[i].substring(10);
+								int j = i;
+								if(lines[i-2].startsWith("COD Collectible Amount")) {
+									j = i-2;
+								}
+								else if(lines[i-3].startsWith("COD Collectible")) {
+									j = i-3;
+								}
+								if(lines[j-1].startsWith("Phone :")) {
+									j = j-1;
+								}
+								String[] address = lines[j - 1].split(",");
 								int len = address.length;
 								boolean flag = true;
 								if (len <= 1) {
 									flag = false;
-									address = lines[i - 2].split(",");
+									address = lines[j - 2].split(",");
 									// len=address.length;
 									// pinCode.add(lines[i-1].trim());
 								}
@@ -146,31 +279,14 @@ public class Extractor {
 								// stateWithSpace.length() - 1)*/);
 								if (flag == false) {
 									state[fileCount] = statePinCode[0].trim();
-									pinCode[fileCount] = lines[i - 1].trim();
+									pinCode[fileCount] = lines[j - 1].trim();
 								} else {
 									state[fileCount] = statePinCode[0].trim();
 									pinCode[fileCount] = statePinCode[1].trim();
 								}
 								// if(pinCode.size()==fileCount)
 								// pinCode.add(statePinCode[end].trim());
-								phone[fileCount] = lines[i].split("  ")[1].trim();
-								String stateWithSpace = "";
-//								for (int j = 2; j < len - 2; j++)
-//									stateWithSpace += address[j] + ' ';
-//								state[fileCount] = stateWithSpace.substring(0, stateWithSpace.length() - 1);
-								if (lines[i + 1].startsWith("COD Collectible Amount")) {
-									transactionType[fileCount] = "COD";
-									grandTotal[fileCount] = Float
-											.valueOf(lines[i + 2].substring(2).replaceAll("[,]", ""));
-								}else if (lines[i + 1].startsWith("COD Collectible")) {
-									if(lines[i + 2].startsWith("Amount")) {
-										transactionType[fileCount] = "COD";
-										grandTotal[fileCount] = Float
-												.valueOf(lines[i + 3].substring(2).replaceAll("[,]", ""));
-									}
-								}
-							} else if (lines[i].startsWith("Order ID:")) {
-								orderId[fileCount] = lines[i].substring(10);
+//								phone[fileCount] = lines[i].split("  ")[1].trim();
 							} else if (lines[i].startsWith("SKU:")) {
 								if (lines[i - 2].startsWith("Item total")) {
 									String[] product = lines[i - 1].split(" ", 2);
@@ -230,6 +346,11 @@ public class Extractor {
 								transactionType[fileCount] = "PREPAID";
 								if (grandTotal[fileCount] == 0)
 									transactionType[fileCount] = "";
+							} else if (lines[i].startsWith("COD Collectible Amount:")) {
+								transactionType[fileCount] = "COD";
+								String[] amount = lines[i].split(" ");
+								grandTotal[fileCount] = Float.valueOf(amount[amount.length-1].substring(2).replaceAll("[,]", "")); 
+//								
 							} else if (lines[i].startsWith("Thanks for buying on Amazon Marketplace.")) {
 								break;
 							}
